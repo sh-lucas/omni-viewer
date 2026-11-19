@@ -117,6 +117,7 @@ function assertZoom(r: Report, opts: { anchored: boolean }) {
   near(z.sizeRatio, z.expected, 0.03, 'conteúdo não escalou pelo zoom');
   near(z.resetRatio, 1, 0.01, 'Ctrl+0 não voltou ao original');
   if (opts.anchored) near(z.anchorAfter, z.anchorBefore, 3, 'ponto sob o cursor andou');
+  assert.equal(z.sameNodes, true, 'o zoom redesenhou o documento (causa o flash branco)');
 }
 
 // Mesmo Firefox, sem precisar trocar para a aba (o WebDriver não entra em moz-extension://)
@@ -149,6 +150,10 @@ const cases: [string, (c: Ctx) => Promise<void>][] = [
     assert.equal(r.kind, 'pptx');
     assert.equal(r.pptxSlides, 2);
     assertZoom(r, { anchored: true });
+    // 1 render ao abrir + 1 no reajuste forçado de largura do probe; o zoom não conta
+    assert.equal(r.pptxRenders, 2, 'renders a mais (flash branco)');
+    assert.ok(r.zoom?.refit, 'sem medição de reajuste');
+    assert.ok(Math.abs(r.zoom.refit.width - r.zoom.refit.expected) <= 1, `slides não reajustaram à janela: ${JSON.stringify(r.zoom.refit)}`);
     assert.match(r.text, /OMNI_PPTX_MARKER/);
     assert.match(r.text, /OMNI_PPTX_SLIDE2/);
     assert.equal(r.title, 'Apresentação.pptx');

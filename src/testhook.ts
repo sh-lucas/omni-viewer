@@ -1,3 +1,5 @@
+import { zoomFromWheel } from './zoom.ts';
+
 // Só entra no build de teste (OMNI_TEST_REPORT definido no build.mjs).
 // O WebDriver do Firefox não inspeciona páginas moz-extension://, então o
 // viewer manda um retrato do que renderizou para o servidor do teste e2e.
@@ -10,6 +12,7 @@ export type Report = {
   text: string;
   docxPages: number;
   pptxSlides: number;
+  pptxRenders: number; // quantas vezes o renderer de pptx desenhou tudo (até o fim do probe)
   sheetImgs: number;
   sheets: Record<string, string>;
   download: { name: string; sha: string } | null;
@@ -24,6 +27,8 @@ export type ZoomProbe = {
   anchorBefore: number; // ponto do conteúdo sob o cursor (y), antes
   anchorAfter: number; // o mesmo ponto, depois, dividido pelo zoom
   resetRatio: number; // largura depois de Ctrl+0 / largura original
+  sameNodes: boolean; // o conteúdo não foi redesenhado (sem flash)
+  refit: { width: number; expected: number } | null; // pptx: reajuste ao estreitar a janela
 };
 
 async function sha256(url: string) {
@@ -46,6 +51,7 @@ async function probeZoom(): Promise<ZoomProbe | null> {
   const scroller = kind === 'xlsx' ? document.querySelector<HTMLElement>('.sheet') : document.querySelector<HTMLElement>('#content');
   if (!sel || !scroller) return null;
   const width = () => document.querySelector(sel)!.getBoundingClientRect().width;
+  const first = document.querySelector(sel)!;
   const w0 = width();
   const rect = scroller.getBoundingClientRect();
   const x = rect.left + rect.width / 2;
@@ -58,15 +64,27 @@ async function probeZoom(): Promise<ZoomProbe | null> {
     scroller.dispatchEvent(ev);
     defaultPrevented &&= ev.defaultPrevented;
   }
-  const expected = Math.exp(0.0025 * 48 * 3);
+  const expected = [48, 48, 48].reduce((z) => zoomFromWheel(z, -48), 1);
   await waitZoom(expected);
   const applied = Number(document.body.dataset.zoom);
   const sizeRatio = width() / w0;
   const anchorAfter = (scroller.scrollTop + (y - rect.top)) / applied;
+  const sameNodes = first.isConnected && document.querySelector(sel) === first;
 
   window.dispatchEvent(new KeyboardEvent('keydown', { key: '0', ctrlKey: true, cancelable: true }));
   await waitZoom(1);
-  return { expected, applied, sizeRatio, defaultPrevented, anchorBefore, anchorAfter, resetRatio: width() / w0 };
+  const resetRatio = width() / w0;
+
+  let refit: ZoomProbe['refit'] = null;
+  if (kind === 'pptx') {
+    // estreita a área do viewer: os slides devem se reajustar à nova largura
+    scroller.style.flex = 'none';
+    scroller.style.width = '700px';
+    for (let i = 0; i < 60 && Math.abs(width() - w0) < 1; i++) await frame();
+    refit = { width: width(), expected: scroller.clientWidth - 32 };
+    scroller.style.flex = scroller.style.width = '';
+  }
+  return { expected, applied, sizeRatio, defaultPrevented, anchorBefore, anchorAfter, resetRatio, sameNodes, refit };
 }
 
 export async function report(endpoint: string) {
@@ -87,10 +105,12 @@ export async function report(endpoint: string) {
     text: document.body.innerText,
     docxPages: document.querySelectorAll('section.docx').length,
     pptxSlides: document.querySelectorAll('[data-slide-index]').length,
+    pptxRenders: 0,
     sheetImgs: document.querySelectorAll('.sheet img').length,
     sheets,
     download: a.hidden ? null : { name: a.download, sha: await sha256(a.href) },
     zoom: document.body.dataset.state === 'ready' ? await probeZoom() : null,
   };
+  r.pptxRenders = Number(document.body.dataset.pptxRenders ?? 0);
   await fetch(endpoint, { method: 'POST', body: JSON.stringify(r) });
 }

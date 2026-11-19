@@ -13,7 +13,9 @@ header .spacer { flex: 1; }
 header a { color: #cfd8ff; }
 header a.button { background: #3d6af2; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; }
 
-main { flex: 1; overflow: auto; }
+/* espaço da barra de rolagem reservado: a largura não muda quando ela aparece,
+   senão o pptx se reajusta e redesenha tudo (flash) */
+main { flex: 1; overflow: auto; scrollbar-gutter: stable; }
 
 #zoom { display: none; gap: 2px; }
 body[data-state="ready"] #zoom { display: inline-flex; }
@@ -33,7 +35,8 @@ body[data-state="empty"] main { flex: none; }
 main.kind-docx .docx-wrapper { background: transparent; zoom: var(--z, 1); }
 
 /* pptx */
-.pptx-host { margin: 16px; }
+.pptx-zoom { zoom: var(--z, 1); padding: 16px 0; }
+.pptx-host { margin: 0 auto; }
 
 /* xlsx */
 main.kind-xlsx { display: flex; flex-direction: column; }

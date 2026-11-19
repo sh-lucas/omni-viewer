@@ -66,7 +66,11 @@ function setupDownload(entry: ViewEntry) {
 
 async function renderDocument(entry: ViewEntry) {
   const root = $('#content');
+  disposeDocument?.();
+  disposeDocument = null;
   root.replaceChildren();
+  root.style.removeProperty('--z');
+  delete document.body.dataset.pptxRenders;
   document.title = entry.filename;
   $('#filename').textContent = entry.filename;
   setupDownload(entry);
@@ -90,10 +94,17 @@ async function renderDocument(entry: ViewEntry) {
     });
     zoomTarget = { scroller: () => root, apply: (z) => root.style.setProperty('--z', String(z)) };
   } else if (kind === 'pptx') {
-    // container próprio: o renderer ajusta à clientWidth (que inclui padding), então o respiro é margem
+    // O zoom é CSS numa caixa por fora do renderer: pedir zoom ao renderer refaz
+    // todos os slides (flash branco a cada passo). O host tem largura fixa em px
+    // para o renderer não reajustar os slides quando o zoom muda; só a janela muda.
+    const box = document.createElement('div');
+    box.className = 'pptx-zoom';
     const host = document.createElement('div');
     host.className = 'pptx-host';
-    root.append(host);
+    box.append(host);
+    root.append(box);
+    const fit = () => (host.style.width = `${Math.max(200, root.clientWidth - 32)}px`);
+    fit();
     const viewer = await PptxViewer.open(entry.data, host, {
       scrollContainer: root,
       zipLimits: RECOMMENDED_ZIP_LIMITS,
@@ -103,9 +114,18 @@ async function renderDocument(entry: ViewEntry) {
       lazySlides: true,
       lazyMedia: true,
       listOptions: { windowed: true, showSlideLabels: true },
+      // contado para o teste e2e: cada render a mais é um flash branco
+      onRenderStart: () => {
+        document.body.dataset.pptxRenders = String(Number(document.body.dataset.pptxRenders ?? 0) + 1);
+      },
     });
-    // o pptx se ajusta à largura: o zoom precisa ser o do renderer, não CSS
-    zoomTarget = { scroller: () => root, apply: (z) => viewer.setZoom(Math.round(z * 100)) };
+    const resize = new ResizeObserver(fit);
+    resize.observe(root);
+    disposeDocument = () => {
+      resize.disconnect();
+      viewer.destroy();
+    };
+    zoomTarget = { scroller: () => root, apply: (z) => root.style.setProperty('--z', String(z)) };
   } else if (kind === 'xlsx') {
     renderXlsx(entry.data, root);
     const sheet = root.querySelector<HTMLElement>('.sheet')!;
@@ -140,6 +160,8 @@ function renderXlsx(data: ArrayBuffer, root: HTMLElement) {
 // ---------- zoom (Ctrl+scroll, pinça, Ctrl +/-/0) ----------
 // Os eventos chegam mais rápido do que o pptx re-renderiza: guarda só o zoom
 // desejado e aplica o último quando o anterior terminar.
+
+let disposeDocument: (() => void) | null = null;
 
 type ZoomTarget = { scroller: () => HTMLElement; apply: (z: number) => unknown };
 let zoomTarget: ZoomTarget | null = null;

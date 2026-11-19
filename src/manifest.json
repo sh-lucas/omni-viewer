@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Omni Viewer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Abre .docx, .pptx e .xlsx direto no navegador, como o leitor de PDF.",
   "browser_specific_settings": {
     "gecko": {
