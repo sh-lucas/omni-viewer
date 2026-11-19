@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import type { Entry } from './background.ts';
 import type { Kind } from './detect.ts';
+import { anchoredScroll, clampZoom, wheelDeltaPx, zoomFromWheel, zoomStep } from './zoom.ts';
 
 type ViewEntry = Omit<Entry, 'kind'> & { kind: Kind | null };
 
@@ -78,6 +79,7 @@ async function renderDocument(entry: ViewEntry) {
     throw new Error('O arquivo não é um documento Office válido (.docx, .pptx ou .xlsx). Formatos antigos (.doc, .ppt, .xls) não são suportados.');
   }
   root.className = `kind-${kind}`;
+  resetZoom();
 
   if (kind === 'docx') {
     await renderDocx(entry.data, root, undefined, {
@@ -86,8 +88,14 @@ async function renderDocument(entry: ViewEntry) {
       ignoreLastRenderedPageBreak: true,
       useBase64URL: false,
     });
+    zoomTarget = { scroller: () => root, apply: (z) => root.style.setProperty('--z', String(z)) };
   } else if (kind === 'pptx') {
-    await PptxViewer.open(entry.data, root, {
+    // container próprio: o renderer ajusta à clientWidth (que inclui padding), então o respiro é margem
+    const host = document.createElement('div');
+    host.className = 'pptx-host';
+    root.append(host);
+    const viewer = await PptxViewer.open(entry.data, host, {
+      scrollContainer: root,
       zipLimits: RECOMMENDED_ZIP_LIMITS,
       pdfjs: false,
       externalMedia: 'block', // não faz requisição para mídia externa referenciada no arquivo
@@ -96,8 +104,12 @@ async function renderDocument(entry: ViewEntry) {
       lazyMedia: true,
       listOptions: { windowed: true, showSlideLabels: true },
     });
+    // o pptx se ajusta à largura: o zoom precisa ser o do renderer, não CSS
+    zoomTarget = { scroller: () => root, apply: (z) => viewer.setZoom(Math.round(z * 100)) };
   } else if (kind === 'xlsx') {
     renderXlsx(entry.data, root);
+    const sheet = root.querySelector<HTMLElement>('.sheet')!;
+    zoomTarget = { scroller: () => sheet, apply: (z) => sheet.style.setProperty('--z', String(z)) };
   } else {
     throw new Error(`Tipo de documento não suportado: ${kind ?? 'desconhecido'}.`);
   }
@@ -125,8 +137,85 @@ function renderXlsx(data: ArrayBuffer, root: HTMLElement) {
   root.append(sheet, tabs);
 }
 
+// ---------- zoom (Ctrl+scroll, pinça, Ctrl +/-/0) ----------
+// Os eventos chegam mais rápido do que o pptx re-renderiza: guarda só o zoom
+// desejado e aplica o último quando o anterior terminar.
+
+type ZoomTarget = { scroller: () => HTMLElement; apply: (z: number) => unknown };
+let zoomTarget: ZoomTarget | null = null;
+let appliedZoom = 1;
+let wantedZoom = 1;
+let zoomAnchor: { x: number; y: number } | null = null;
+let zoomBusy = false;
+
+function resetZoom() {
+  zoomTarget = null;
+  appliedZoom = wantedZoom = 1;
+  updateZoomLabel();
+}
+
+function updateZoomLabel() {
+  $('#zoom-reset').textContent = `${Math.round(wantedZoom * 100)}%`;
+}
+
+function requestZoom(z: number, anchor: { x: number; y: number } | null = null) {
+  if (!zoomTarget) return;
+  wantedZoom = clampZoom(z);
+  zoomAnchor = anchor;
+  updateZoomLabel();
+  if (!zoomBusy) void pumpZoom();
+}
+
+async function pumpZoom() {
+  zoomBusy = true;
+  try {
+    while (zoomTarget && wantedZoom !== appliedZoom) {
+      const target = zoomTarget;
+      const next = wantedZoom;
+      const el = target.scroller();
+      const rect = el.getBoundingClientRect();
+      const cx = zoomAnchor ? zoomAnchor.x - rect.left : el.clientWidth / 2;
+      const cy = zoomAnchor ? zoomAnchor.y - rect.top : el.clientHeight / 2;
+      const ratio = next / appliedZoom;
+      const left = el.scrollLeft;
+      const top = el.scrollTop;
+      await target.apply(next);
+      if (target !== zoomTarget) return; // trocou de documento no meio
+      appliedZoom = next;
+      el.scrollLeft = anchoredScroll(left, cx, ratio);
+      el.scrollTop = anchoredScroll(top, cy, ratio);
+    }
+  } catch (err) {
+    console.error('zoom', err);
+  } finally {
+    zoomBusy = false;
+    document.body.dataset.zoom = appliedZoom.toFixed(4);
+  }
+}
+
+function setupZoom() {
+  // passive: false para poder impedir o zoom do navegador
+  window.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey || !zoomTarget) return;
+    e.preventDefault();
+    requestZoom(zoomFromWheel(wantedZoom, wheelDeltaPx(e)), { x: e.clientX, y: e.clientY });
+  }, { passive: false });
+  window.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || !zoomTarget) return;
+    if (e.key === '+' || e.key === '=') requestZoom(zoomStep(wantedZoom, 1));
+    else if (e.key === '-' || e.key === '_') requestZoom(zoomStep(wantedZoom, -1));
+    else if (e.key === '0') requestZoom(1);
+    else return;
+    e.preventDefault();
+  });
+  $('#zoom-in').onclick = () => requestZoom(zoomStep(wantedZoom, 1));
+  $('#zoom-out').onclick = () => requestZoom(zoomStep(wantedZoom, -1));
+  $('#zoom-reset').onclick = () => requestZoom(1);
+}
+
 function showError(err: unknown) {
   console.error(err);
+  resetZoom();
   setState('error');
   const p = document.createElement('p');
   p.className = 'error';
@@ -164,6 +253,7 @@ function setupDrop() {
 
 async function main() {
   setupDrop();
+  setupZoom();
   try {
     const entry = await loadFromParams();
     if (entry) await renderDocument(entry);

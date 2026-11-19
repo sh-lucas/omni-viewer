@@ -14,6 +14,13 @@ header a { color: #cfd8ff; }
 header a.button { background: #3d6af2; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; }
 
 main { flex: 1; overflow: auto; }
+
+#zoom { display: none; gap: 2px; }
+body[data-state="ready"] #zoom { display: inline-flex; }
+#zoom button { background: #2f353d; color: #fff; border: 0; padding: 4px 10px; cursor: pointer; font: inherit; }
+#zoom button:first-child { border-radius: 6px 0 0 6px; }
+#zoom button:last-child { border-radius: 0 6px 6px 0; }
+#zoom-reset { min-width: 4.5em; }
 body[data-state="loading"] main::before { content: "Carregando…"; display: block; padding: 2em; }
 .error { margin: 2em; padding: 1em; background: #fde8e8; color: #8a1c1c; border-radius: 6px; }
 
@@ -23,16 +30,15 @@ body[data-state="empty"] main { flex: none; }
 #picker { display: none; }
 
 /* docx-preview já desenha as páginas; só centraliza */
-main.kind-docx .docx-wrapper { background: transparent; }
+main.kind-docx .docx-wrapper { background: transparent; zoom: var(--z, 1); }
 
 /* pptx */
-main.kind-pptx { padding: 16px; }
-main.kind-pptx > * { max-width: 1200px; margin: 0 auto; }
+.pptx-host { margin: 16px; }
 
 /* xlsx */
 main.kind-xlsx { display: flex; flex-direction: column; }
 .sheet { flex: 1; overflow: auto; background: #fff; color: #000; }
-.sheet table { border-collapse: collapse; }
+.sheet table { border-collapse: collapse; zoom: var(--z, 1); }
 .sheet td { border: 1px solid #d0d0d0; padding: 2px 6px; white-space: nowrap; }
 .sheet-tabs { flex: none; display: flex; gap: 2px; padding: 4px 8px; background: #f1f3f4; }
 .sheet-tabs button { border: 0; padding: 6px 12px; background: transparent; cursor: pointer; }

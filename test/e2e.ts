@@ -106,6 +106,19 @@ async function nextReport(d: WebDriver): Promise<Report> {
   return reports[n]!;
 }
 
+// Ctrl+roda deve escalar o conteúdo pelo zoom pedido, sem o zoom do navegador,
+// mantendo o ponto sob o cursor; Ctrl+0 volta ao tamanho original.
+function assertZoom(r: Report, opts: { anchored: boolean }) {
+  const z = r.zoom;
+  assert.ok(z, 'sem medição de zoom');
+  const near = (a: number, b: number, tol: number, what: string) => assert.ok(Math.abs(a - b) <= tol, `${what}: ${a} vs ${b}`);
+  assert.equal(z.defaultPrevented, true, 'o zoom do navegador não foi impedido');
+  near(z.applied, z.expected, 1e-3, 'zoom aplicado');
+  near(z.sizeRatio, z.expected, 0.03, 'conteúdo não escalou pelo zoom');
+  near(z.resetRatio, 1, 0.01, 'Ctrl+0 não voltou ao original');
+  if (opts.anchored) near(z.anchorAfter, z.anchorBefore, 3, 'ponto sob o cursor andou');
+}
+
 // Mesmo Firefox, sem precisar trocar para a aba (o WebDriver não entra em moz-extension://)
 async function goBack(d: WebDriver) {
   await (d as firefox.Driver).setContext(firefox.Context.CHROME);
@@ -124,6 +137,7 @@ const cases: [string, (c: Ctx) => Promise<void>][] = [
     assert.match(r.text, /OMNI_DOCX_MARKER/);
     assert.match(r.text, /OMNI_DOCX_PAGE2/);
     assert.equal(r.docxPages, 2);
+    assertZoom(r, { anchored: true });
     assert.deepEqual(r.download, { name: 'sample.docx', sha: sha(file('sample.docx')) });
     assert.match(await d.getCurrentUrl(), /^moz-extension:\/\/.*viewer\.html/, 'não abriu na mesma aba');
     await goBack(d);
@@ -134,6 +148,7 @@ const cases: [string, (c: Ctx) => Promise<void>][] = [
     const r = await nextReport(d);
     assert.equal(r.kind, 'pptx');
     assert.equal(r.pptxSlides, 2);
+    assertZoom(r, { anchored: true });
     assert.match(r.text, /OMNI_PPTX_MARKER/);
     assert.match(r.text, /OMNI_PPTX_SLIDE2/);
     assert.equal(r.title, 'Apresentação.pptx');
@@ -149,6 +164,7 @@ const cases: [string, (c: Ctx) => Promise<void>][] = [
     assert.match(r.sheets.Primeira!, /OMNI_XLSX_MARKER/);
     assert.match(r.sheets.Primeira!, /<img src=x onerror=/); // aparece como texto
     assert.equal(r.sheetImgs, 0);
+    assertZoom(r, { anchored: false }); // planilha pequena: nada para rolar
     assert.match(r.sheets.Segunda!, /OMNI_XLSX_SHEET2/);
   }],
   ['rota com cookie: usa a resposta original, sem baixar de novo', async ({ d }) => {

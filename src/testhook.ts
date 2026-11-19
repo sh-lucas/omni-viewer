@@ -13,12 +13,60 @@ export type Report = {
   sheetImgs: number;
   sheets: Record<string, string>;
   download: { name: string; sha: string } | null;
+  zoom: ZoomProbe | null;
+};
+
+export type ZoomProbe = {
+  expected: number; // zoom que 3 passos de Ctrl+roda devem dar
+  applied: number; // body[data-zoom] depois de aplicar
+  sizeRatio: number; // largura do conteúdo depois / antes
+  defaultPrevented: boolean; // o navegador não fez o zoom dele junto
+  anchorBefore: number; // ponto do conteúdo sob o cursor (y), antes
+  anchorAfter: number; // o mesmo ponto, depois, dividido pelo zoom
+  resetRatio: number; // largura depois de Ctrl+0 / largura original
 };
 
 async function sha256(url: string) {
   const buf = await (await fetch(url)).arrayBuffer();
   const h = await crypto.subtle.digest('SHA-256', buf);
   return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+
+const frame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
+
+async function waitZoom(value: number) {
+  for (let i = 0; i < 200 && Math.abs(Number(document.body.dataset.zoom ?? 1) - value) > 1e-3; i++) await frame();
+  await frame();
+}
+
+// Simula Ctrl+roda (3 passos para cima) no meio da área visível e mede o efeito.
+async function probeZoom(): Promise<ZoomProbe | null> {
+  const kind = document.body.dataset.kind;
+  const sel = kind === 'docx' ? 'section.docx' : kind === 'pptx' ? '[data-slide-index]' : kind === 'xlsx' ? '.sheet table' : null;
+  const scroller = kind === 'xlsx' ? document.querySelector<HTMLElement>('.sheet') : document.querySelector<HTMLElement>('#content');
+  if (!sel || !scroller) return null;
+  const width = () => document.querySelector(sel)!.getBoundingClientRect().width;
+  const w0 = width();
+  const rect = scroller.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  const anchorBefore = scroller.scrollTop + (y - rect.top);
+
+  let defaultPrevented = true;
+  for (let i = 0; i < 3; i++) {
+    const ev = new WheelEvent('wheel', { ctrlKey: true, deltaY: -3, deltaMode: 1, clientX: x, clientY: y, bubbles: true, cancelable: true });
+    scroller.dispatchEvent(ev);
+    defaultPrevented &&= ev.defaultPrevented;
+  }
+  const expected = Math.exp(0.0025 * 48 * 3);
+  await waitZoom(expected);
+  const applied = Number(document.body.dataset.zoom);
+  const sizeRatio = width() / w0;
+  const anchorAfter = (scroller.scrollTop + (y - rect.top)) / applied;
+
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: '0', ctrlKey: true, cancelable: true }));
+  await waitZoom(1);
+  return { expected, applied, sizeRatio, defaultPrevented, anchorBefore, anchorAfter, resetRatio: width() / w0 };
 }
 
 export async function report(endpoint: string) {
@@ -42,6 +90,7 @@ export async function report(endpoint: string) {
     sheetImgs: document.querySelectorAll('.sheet img').length,
     sheets,
     download: a.hidden ? null : { name: a.download, sha: await sha256(a.href) },
+    zoom: document.body.dataset.state === 'ready' ? await probeZoom() : null,
   };
   await fetch(endpoint, { method: 'POST', body: JSON.stringify(r) });
 }
