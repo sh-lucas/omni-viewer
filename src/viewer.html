@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Omni Viewer</title>
+  <link rel="stylesheet" href="viewer.css">
+</head>
+<body data-state="loading">
+  <header>
+    <span id="filename">Omni Viewer</span>
+    <span class="spacer"></span>
+    <a id="original" hidden target="_blank" rel="noreferrer">Link original</a>
+    <a id="download" class="button" hidden>Baixar original</a>
+  </header>
+  <main id="content"></main>
+  <label id="dropzone">
+    <input id="picker" type="file" accept=".docx,.docm,.pptx,.pptm,.ppsx,.ppsm,.xlsx,.xlsm">
+    Arraste um .docx, .pptx ou .xlsx aqui, ou clique para escolher.
+  </label>
+  <script src="viewer.js"></script>
+</body>
+</html>

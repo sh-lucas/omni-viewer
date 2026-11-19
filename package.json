@@ -1,0 +1,28 @@
+{
+  "name": "omni-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aiden0z/pptx-renderer": "^1.4.0",
+    "docx-preview": "^0.4.1",
+    "jszip": "^3.10.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/firefox-webext-browser": "^143.0.1",
+    "@types/node": "^26.6.6",
+    "@types/selenium-webdriver": "^4.35.7",
+    "esbuild": "^0.28.2",
+    "selenium-webdriver": "^4.53.0",
+    "typescript": "^7.0.2",
+    "web-ext": "^10.8.0"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p .",
+    "test": "node --test test/*.test.ts",
+    "test:e2e": "node test/e2e.ts",
+    "fixtures": "python test/make-fixtures.py test/fixtures"
+  }
+}

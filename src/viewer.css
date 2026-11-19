@@ -1,0 +1,39 @@
+:root { color-scheme: light dark; --bar: #1f2329; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { display: flex; flex-direction: column; font: 14px system-ui, sans-serif; background: #e8eaed; }
+@media (prefers-color-scheme: dark) { body { background: #2b2e33; } }
+
+header {
+  display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+  background: var(--bar); color: #fff; flex: none;
+}
+header #filename { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+header .spacer { flex: 1; }
+header a { color: #cfd8ff; }
+header a.button { background: #3d6af2; color: #fff; padding: 6px 12px; border-radius: 6px; text-decoration: none; }
+
+main { flex: 1; overflow: auto; }
+body[data-state="loading"] main::before { content: "Carregando…"; display: block; padding: 2em; }
+.error { margin: 2em; padding: 1em; background: #fde8e8; color: #8a1c1c; border-radius: 6px; }
+
+#dropzone { display: none; margin: 2em auto; padding: 4em; max-width: 640px; border: 2px dashed #888; border-radius: 12px; text-align: center; cursor: pointer; }
+body[data-state="empty"] #dropzone { display: block; }
+body[data-state="empty"] main { flex: none; }
+#picker { display: none; }
+
+/* docx-preview já desenha as páginas; só centraliza */
+main.kind-docx .docx-wrapper { background: transparent; }
+
+/* pptx */
+main.kind-pptx { padding: 16px; }
+main.kind-pptx > * { max-width: 1200px; margin: 0 auto; }
+
+/* xlsx */
+main.kind-xlsx { display: flex; flex-direction: column; }
+.sheet { flex: 1; overflow: auto; background: #fff; color: #000; }
+.sheet table { border-collapse: collapse; }
+.sheet td { border: 1px solid #d0d0d0; padding: 2px 6px; white-space: nowrap; }
+.sheet-tabs { flex: none; display: flex; gap: 2px; padding: 4px 8px; background: #f1f3f4; }
+.sheet-tabs button { border: 0; padding: 6px 12px; background: transparent; cursor: pointer; }
+.sheet-tabs button.active { background: #fff; font-weight: 600; border-bottom: 2px solid #1e7145; }
