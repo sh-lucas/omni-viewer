@@ -1,0 +1,63 @@
+{
+  "extDescription": {
+    "message": "Abre arquivos .docx, .pptx e .xlsx direto no navegador, como o leitor de PDF."
+  },
+  "actionTitle": {
+    "message": "Abrir arquivo no OmniViewer"
+  },
+  "opening": {
+    "message": "Abrindo documento no OmniViewer…"
+  },
+  "tooLarge": {
+    "message": "Arquivo grande demais para o viewer."
+  },
+  "downloadNormally": {
+    "message": "Baixar normalmente"
+  },
+  "loading": {
+    "message": "Carregando…"
+  },
+  "originalLink": {
+    "message": "Link original"
+  },
+  "downloadOriginal": {
+    "message": "Baixar original"
+  },
+  "zoomHint": {
+    "message": "Ctrl + scroll, pinça ou Ctrl +/-/0"
+  },
+  "zoomOut": {
+    "message": "Diminuir zoom"
+  },
+  "zoomReset": {
+    "message": "Zoom original"
+  },
+  "zoomIn": {
+    "message": "Aumentar zoom"
+  },
+  "dropHint": {
+    "message": "Arraste um .docx, .pptx ou .xlsx aqui, ou clique para escolher."
+  },
+  "errRefetch": {
+    "message": "Não consegui baixar de novo o original (HTTP $ARG$).",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  },
+  "errInvalid": {
+    "message": "O arquivo não é um documento Office válido (.docx, .pptx ou .xlsx). Formatos antigos (.doc, .ppt, .xls) não são suportados."
+  },
+  "errUnsupported": {
+    "message": "Tipo de documento não suportado: $ARG$.",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  },
+  "unknown": {
+    "message": "desconhecido"
+  }
+}

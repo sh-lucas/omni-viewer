@@ -207,7 +207,7 @@ const cases: [string, (c: Ctx) => Promise<void>][] = [
     await d.findElement(By.id('fake')).click();
     const r = await nextReport(d);
     assert.equal(r.state, 'error');
-    assert.match(r.text, /não é um documento Office válido/);
+    assert.match(r.text, /not a valid Office document/); // Firefox de teste em en-US
   }],
   ['página HTML comum não é interceptada', async ({ d, base }) => {
     await d.findElement(By.id('plain')).click();

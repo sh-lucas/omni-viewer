@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 6 120 120">
+  <!-- planilha (fundo) -->
+  <g transform="rotate(-14 64 100)">
+    <rect x="30" y="18" width="62" height="80" rx="7" fill="#1f9d55"/>
+    <path d="M40 40h42M40 54h42M40 68h42M40 82h42M54 30v60M68 30v60" stroke="#fff" stroke-opacity=".55" stroke-width="3"/>
+  </g>
+  <!-- slide (meio) -->
+  <g transform="rotate(10 64 100)">
+    <rect x="36" y="16" width="62" height="80" rx="7" fill="#f2711c"/>
+    <rect x="45" y="30" width="44" height="28" rx="3" fill="#fff" fill-opacity=".9"/>
+    <rect x="45" y="66" width="30" height="5" rx="2.5" fill="#fff" fill-opacity=".7"/>
+  </g>
+  <!-- documento de texto (frente), com canto dobrado -->
+  <path d="M38 22h38l18 18v62a7 7 0 0 1-7 7H38a7 7 0 0 1-7-7V29a7 7 0 0 1 7-7z" fill="#5b3fd6"/>
+  <path d="M76 22v13a5 5 0 0 0 5 5h13z" fill="#c9bcff"/>
+  <path d="M42 54h40M42 66h40M42 78h40M42 90h26" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+</svg>

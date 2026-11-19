@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import type { Entry } from './background.ts';
 import type { Kind } from './detect.ts';
+import { localizePage, t } from './i18n.ts';
 import { anchoredScroll, clampZoom, wheelDeltaPx, zoomFromWheel, zoomStep } from './zoom.ts';
 
 type ViewEntry = Omit<Entry, 'kind'> & { kind: Kind | null };
@@ -40,10 +41,10 @@ async function loadFromParams(): Promise<ViewEntry | null> {
   const src = params.get('src');
   if (src) {
     const resp = await fetch(src, { credentials: 'include' });
-    if (!resp.ok) throw new Error(`Não consegui baixar de novo o original (HTTP ${resp.status}).`);
+    if (!resp.ok) throw new Error(t('errRefetch', String(resp.status)));
     return {
       data: await resp.arrayBuffer(),
-      filename: params.get('name') || 'documento',
+      filename: params.get('name') || 'document',
       kind: params.get('kind') as Kind | null,
       mime: resp.headers.get('content-type') || 'application/octet-stream',
       url: src,
@@ -80,7 +81,7 @@ async function renderDocument(entry: ViewEntry) {
   try {
     kind = (await sniffKind(entry.data)) ?? entry.kind;
   } catch {
-    throw new Error('O arquivo não é um documento Office válido (.docx, .pptx ou .xlsx). Formatos antigos (.doc, .ppt, .xls) não são suportados.');
+    throw new Error(t('errInvalid'));
   }
   root.className = `kind-${kind}`;
   resetZoom();
@@ -131,7 +132,7 @@ async function renderDocument(entry: ViewEntry) {
     const sheet = root.querySelector<HTMLElement>('.sheet')!;
     zoomTarget = { scroller: () => sheet, apply: (z) => sheet.style.setProperty('--z', String(z)) };
   } else {
-    throw new Error(`Tipo de documento não suportado: ${kind ?? 'desconhecido'}.`);
+    throw new Error(t('errUnsupported', kind ?? t('unknown')));
   }
   setState('ready', { kind });
 }
@@ -274,6 +275,7 @@ function setupDrop() {
 }
 
 async function main() {
+  localizePage();
   setupDrop();
   setupZoom();
   try {

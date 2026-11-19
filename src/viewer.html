@@ -1,26 +1,28 @@
 <!doctype html>
-<html lang="pt-BR">
+<html>
 <head>
   <meta charset="utf-8">
-  <title>Omni Viewer</title>
+  <title>OmniViewer</title>
+  <link rel="icon" href="icon.svg">
   <link rel="stylesheet" href="viewer.css">
 </head>
 <body data-state="loading">
   <header>
-    <span id="filename">Omni Viewer</span>
+    <span id="filename">OmniViewer</span>
     <span class="spacer"></span>
-    <span id="zoom" title="Ctrl + scroll, pinça ou Ctrl +/-/0">
-      <button id="zoom-out" aria-label="Diminuir zoom">−</button>
-      <button id="zoom-reset" aria-label="Zoom original">100%</button>
-      <button id="zoom-in" aria-label="Aumentar zoom">+</button>
+    <span id="zoom" data-i18n-title="zoomHint">
+      <button id="zoom-out" data-i18n-aria="zoomOut">−</button>
+      <button id="zoom-reset" data-i18n-aria="zoomReset">100%</button>
+      <button id="zoom-in" data-i18n-aria="zoomIn">+</button>
     </span>
-    <a id="original" hidden target="_blank" rel="noreferrer">Link original</a>
-    <a id="download" class="button" hidden>Baixar original</a>
+    <a id="original" hidden target="_blank" rel="noreferrer" data-i18n="originalLink"></a>
+    <a id="download" class="button" hidden data-i18n="downloadOriginal"></a>
   </header>
+  <p id="loading" data-i18n="loading"></p>
   <main id="content"></main>
   <label id="dropzone">
     <input id="picker" type="file" accept=".docx,.docm,.pptx,.pptm,.ppsx,.ppsm,.xlsx,.xlsm">
-    Arraste um .docx, .pptx ou .xlsx aqui, ou clique para escolher.
+    <span data-i18n="dropHint"></span>
   </label>
   <script src="viewer.js"></script>
 </body>

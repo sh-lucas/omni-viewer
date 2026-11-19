@@ -1,0 +1,63 @@
+{
+  "extDescription": {
+    "message": "Open .docx, .pptx and .xlsx files right in the browser, like the PDF viewer."
+  },
+  "actionTitle": {
+    "message": "Open a file in OmniViewer"
+  },
+  "opening": {
+    "message": "Opening document in OmniViewer…"
+  },
+  "tooLarge": {
+    "message": "File too large for the viewer."
+  },
+  "downloadNormally": {
+    "message": "Download normally"
+  },
+  "loading": {
+    "message": "Loading…"
+  },
+  "originalLink": {
+    "message": "Original link"
+  },
+  "downloadOriginal": {
+    "message": "Download original"
+  },
+  "zoomHint": {
+    "message": "Ctrl + scroll, pinch or Ctrl +/-/0"
+  },
+  "zoomOut": {
+    "message": "Zoom out"
+  },
+  "zoomReset": {
+    "message": "Reset zoom"
+  },
+  "zoomIn": {
+    "message": "Zoom in"
+  },
+  "dropHint": {
+    "message": "Drop a .docx, .pptx or .xlsx file here, or click to choose one."
+  },
+  "errRefetch": {
+    "message": "Could not download the original again (HTTP $ARG$).",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  },
+  "errInvalid": {
+    "message": "This file is not a valid Office document (.docx, .pptx or .xlsx). Legacy formats (.doc, .ppt, .xls) are not supported."
+  },
+  "errUnsupported": {
+    "message": "Unsupported document type: $ARG$.",
+    "placeholders": {
+      "arg": {
+        "content": "$1"
+      }
+    }
+  },
+  "unknown": {
+    "message": "unknown"
+  }
+}

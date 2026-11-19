@@ -79,7 +79,7 @@ export function detect(url: string, responseHeaders: Header[]): Detected | null 
   if (!kind && GENERIC_MIMES.has(mime)) kind = kindFromFilename(named);
   if (!kind) return null;
 
-  let filename = named || 'documento';
+  let filename = named || 'document';
   if (!kindFromFilename(filename)) filename += `.${kind}`;
   return { kind, filename, mime: mime || 'application/octet-stream' };
 }

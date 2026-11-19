@@ -23,7 +23,8 @@ body[data-state="ready"] #zoom { display: inline-flex; }
 #zoom button:first-child { border-radius: 6px 0 0 6px; }
 #zoom button:last-child { border-radius: 0 6px 6px 0; }
 #zoom-reset { min-width: 4.5em; }
-body[data-state="loading"] main::before { content: "Carregando…"; display: block; padding: 2em; }
+#loading { display: none; margin: 2em; }
+body[data-state="loading"] #loading { display: block; }
 .error { margin: 2em; padding: 1em; background: #fde8e8; color: #8a1c1c; border-radius: 6px; }
 
 #dropzone { display: none; margin: 2em auto; padding: 4em; max-width: 640px; border: 2px dashed #888; border-radius: 12px; text-align: center; cursor: pointer; }

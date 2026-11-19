@@ -1,6 +1,6 @@
 {
-  "name": "omni-viewer",
-  "version": "0.2.1",
+  "name": "omniviewer",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "dependencies": {
@@ -24,5 +24,9 @@
     "test": "node --test test/*.test.ts",
     "test:e2e": "node test/e2e.ts",
     "fixtures": "python test/make-fixtures.py test/fixtures"
-  }
+  },
+  "license": "MIT",
+  "description": "Open .docx, .pptx and .xlsx files right in Firefox, like the PDF viewer.",
+  "repository": "github:sh-lucas/omni-viewer",
+  "packageManager": "pnpm@11.27.0"
 }

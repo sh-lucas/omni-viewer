@@ -1,0 +1,15 @@
+{
+  "categories": { "firefox": ["other"] },
+  "summary": {
+    "en-US": "Open .docx, .pptx and .xlsx files right in Firefox, like the built-in PDF viewer. Everything runs locally."
+  },
+  "description": {
+    "en-US": "Click a link to a Word, PowerPoint or Excel file and OmniViewer opens it in a tab instead of downloading it, just like Firefox does with PDFs.\n\n<b>Features</b>\n<ul><li>Opens .docx, .pptx and .xlsx (plus .docm, .pptm, .ppsx, .xlsm)</li><li>Works on sites behind a login (Moodle, webmail, intranets): it reuses the site's own response, so the file is never downloaded twice</li><li>\"Download original\" button gives you the untouched file</li><li>Zoom with Ctrl+scroll, touchpad pinch, or Ctrl +/-/0</li><li>Open local files by clicking the toolbar button and dropping the file on the page</li><li>English and Brazilian Portuguese interface</li></ul>\n\n<b>Privacy</b>\nDocuments are rendered entirely inside your browser. Nothing is uploaded anywhere and the extension collects no data.\n\n<b>Limitations</b>\nLegacy binary formats (.doc, .ppt, .xls) are not supported. Complex slides (SmartArt, some charts and effects) may not look exactly like in PowerPoint.\n\nOpen source (MIT): https://github.com/sh-lucas/omni-viewer"
+  },
+  "homepage": { "en-US": "https://github.com/sh-lucas/omni-viewer" },
+  "support_url": { "en-US": "https://github.com/sh-lucas/omni-viewer/issues" },
+  "version": {
+    "license": "MIT",
+    "approval_notes": "The extension code is bundled (not minified) with esbuild from TypeScript sources; the full source is attached and is also at https://github.com/sh-lucas/omni-viewer.\n\nBuild: Node.js 22+ and pnpm 11 (pinned via packageManager), then `pnpm install --frozen-lockfile && pnpm build`. The output in dist/ is the submitted package.\n\nWhy the permissions: webRequest/webRequestBlocking/<all_urls> are needed to detect Office documents in HTTP responses (by Content-Type or file name) and to read their bytes with filterResponseData, so the viewer can render them without downloading again. Only main_frame/sub_frame responses that are OOXML documents are touched; everything else passes through unchanged. No data leaves the browser.\n\nThird-party libraries bundled: docx-preview, @aiden0z/pptx-renderer (with jszip and echarts), xlsx (SheetJS). The `new Function` warning comes from jszip's setImmediate polyfill and is never reached in the extension (and the default extension CSP blocks it anyway). innerHTML assignments come from these libraries and from SheetJS's sheet_to_html, which escapes cell contents."
+  }
+}

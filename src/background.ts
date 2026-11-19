@@ -6,6 +6,7 @@
 // Firefox não abrir o diálogo de download -> no fim, a aba vai para o viewer.
 
 import { detect, header, type Detected } from './detect.ts';
+import { escapeHtml, t } from './i18n.ts';
 
 export type Entry = Detected & { data: ArrayBuffer; url: string | null };
 
@@ -26,10 +27,10 @@ function viewerUrl(id: string, info: Detected, url: string) {
   return browser.runtime.getURL(`viewer.html?${q}`);
 }
 
-const PLACEHOLDER = new TextEncoder().encode(
-  '<!doctype html><meta charset="utf-8"><title>Abrindo…</title>' +
-    '<p style="font:16px system-ui;margin:2em">Abrindo documento no Omni Viewer…</p>',
-);
+// Página provisória que o Firefox mostra enquanto o arquivo chega
+const enc = new TextEncoder();
+const page = (html: string) =>
+  enc.encode(`<!doctype html><meta charset="utf-8"><title>OmniViewer</title><p style="font:16px system-ui;margin:2em">${html}</p>`);
 
 function onHeadersReceived(
   details: browser.webRequest._OnHeadersReceivedDetails,
@@ -48,7 +49,7 @@ function onHeadersReceived(
   let size = 0;
   let failed = false;
 
-  filter.onstart = () => filter.write(PLACEHOLDER);
+  filter.onstart = () => filter.write(page(escapeHtml(t('opening'))));
   filter.ondata = (e: { data: ArrayBuffer }) => {
     size += e.data.byteLength;
     if (size > MAX_BYTES) failed = true;
@@ -57,11 +58,7 @@ function onHeadersReceived(
   filter.onstop = async () => {
     if (failed) {
       bypass.add(details.url);
-      const link = details.url.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-      filter.write(new TextEncoder().encode(
-        `<p style="font:16px system-ui;margin:2em">Arquivo grande demais para o viewer. ` +
-          `<a href="${link}">Baixar normalmente</a></p>`,
-      ));
+      filter.write(page(`${escapeHtml(t('tooLarge'))} <a href="${escapeHtml(details.url)}">${escapeHtml(t('downloadNormally'))}</a>`));
       filter.close();
       return;
     }

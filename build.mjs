@@ -13,7 +13,7 @@ await esbuild.build({
   entryPoints: ['src/background.ts', 'src/viewer.ts'],
   bundle: true,
   format: 'iife',
-  target: 'firefox115',
+  target: 'firefox140',
   outdir,
   define: {
     'process.env.NODE_ENV': '"production"',
@@ -21,4 +21,6 @@ await esbuild.build({
   },
   logLevel: 'warning',
 });
-for (const f of ['manifest.json', 'viewer.html', 'viewer.css']) cpSync(`src/${f}`, `${outdir}/${f}`);
+for (const f of ['manifest.json', 'viewer.html', 'viewer.css', 'icon.svg', '_locales']) {
+  cpSync(`src/${f}`, `${outdir}/${f}`, { recursive: true });
+}
